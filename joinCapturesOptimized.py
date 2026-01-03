@@ -7,7 +7,7 @@ COLS = 17
 TILE_W = 1945
 TILE_H = 920
 
-INPUT_DIR = "E:\\prog\\AutoHotkey\\scripts\\Capture\\Capturas"
+INPUT_DIR = "./captures"
 OUTPUT_PNG = "mosaico_final.png"
 OUTPUT_JPG = "mosaico_final.jpg"
 JPG_QUALITY = 85
