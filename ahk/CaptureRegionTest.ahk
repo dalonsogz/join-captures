@@ -1,3 +1,23 @@
+/*
+============================================================
+Script: capture_region_single.ahk
+Prop贸sito: Captura una regi贸n fija de la pantalla y guarda
+           el resultado como PNG de alta calidad (100).
+Detalles:
+- Utiliza GDI+ a trav茅s de la librer铆a Gdip_All.ahk
+- Configuraci贸n inicial permite definir:
+    - Esquina superior izquierda (x1, y1)
+    - Tama帽o de la regi贸n (w, h)
+    - Desplazamiento opcional (dx, dy) y delay
+- El script crea autom谩ticamente la carpeta 'captures'
+- Guardado de la imagen final en la ruta ./captures/ahk_test.png
+- Incluye liberaci贸n de recursos GDI+ al finalizar
+Uso:
+- Ejecutar el script, espera un mensaje indicando que la imagen
+  ha sido guardada.
+============================================================
+*/
+
 #Include ./libs/Gdip_All.ahk
 ;https://github.com/marius-sucan/AHK-GDIp-Library-Compilation
 
@@ -7,9 +27,9 @@ SetBatchLines, -1
 CoordMode, Pixel, Screen
 CoordMode, Mouse, Screen
 
-; ===== CONFIGURACI覰 =====
-dx := 300      ; p韝eles scroll horizontal
-dy := 200      ; p韝eles scroll vertical
+; ===== CONFIGURACI脫N =====
+dx := 300      ; p铆xeles scroll horizontal
+dy := 200      ; p铆xeles scroll vertical
 delay := 300   ; ms entre acciones
 x1 := 400      ; esquina superior izquierda
 y1 := 200
@@ -18,7 +38,7 @@ h := 400      ; alto
 x2 := x1 + w
 y2 := y1 + h
 
-outputDir := A_ScriptDir . "\Capturas"
+outputDir := A_ScriptDir . "\captures\"
 delay := 300
 
 FileCreateDir, %outputDir%
@@ -27,11 +47,11 @@ pToken := Gdip_Startup()
 if !pToken
     ExitApp
 
-; Capturar regi髇 de pantalla
+; Capturar regi贸n de pantalla
 pBitmap := Gdip_BitmapFromScreen(x1 "|" y1 "|" x2 "|" y2)
 
 ; Ruta del archivo PNG en el mismo directorio del script
-FileName := A_ScriptDir . "\Capturas\ahk_test.png"
+FileName := outputDir . "ahk_test.png"
 
 ; Guardar como PNG (calidad 100)
 Gdip_SaveBitmapToFile(pBitmap, FileName, 100)
@@ -47,7 +67,7 @@ Gdip_Shutdown(pToken)
 ExitApp
 
 
-; ===== FUNCI覰 DE CAPTURA =====
+; ===== FUNCI脫N DE CAPTURA =====
 CaptureRegion(x, y, w, h, file)
 {
     hbm := CreateDIBSection(w, h)

@@ -1,3 +1,27 @@
+/*
+============================================================
+Script: capture_full_mosaic.ahk
+Prop贸sito: Captura autom谩ticamente un mosaico completo de
+           m煤ltiples filas y columnas de la pantalla.
+Detalles:
+- Utiliza GDI+ y MouseClickDrag para recorrer la regi贸n a capturar
+- Configuraci贸n inicial permite definir:
+    - Coordenadas de la regi贸n de captura (x1, y1, x2, y2)
+    - N煤mero de filas y columnas (nRows, nCols)
+    - Delay entre acciones
+- Cada captura se guarda como PNG con nombre:
+    row_col_ahk_test.png en la carpeta ./captures/
+- El script realiza scroll horizontal y vertical para recorrer todo el mosaico
+- Incluye funciones auxiliares:
+    - MouseClickDragCustom: movimiento y clic del rat贸n
+    - DrawCaptureArea y DrawRectangle/Circle: visualizaci贸n de 谩rea
+- Manejo seguro de GDI+ y liberaci贸n de recursos al finalizar
+- Esc + salir cierra el script inmediatamente
+Uso:
+- Ejecutar el script; espera unos segundos y empieza la captura
+============================================================
+*/
+
 #Include ./libs/Gdip_All.ahk
 ;https://github.com/marius-sucan/AHK-GDIp-Library-Compilation
 
@@ -5,7 +29,7 @@
 #NoEnv
 SetBatchLines -1
 
-; CONFIGURACI覰
+; CONFIGURACI脫N
 x1 := 285
 y1 := 230
 x2 := 2230
@@ -15,11 +39,11 @@ h := y2-y1      ; alto
 
 ; POSICIONES BASE
 startRow := 1
-nRows := 23     ; n鷐ero de filas (23)
+nRows := 23     ; n煤mero de filas (23)
 nCols := 17     ; capturas por fila (17)
 delay := 500    ; ms entre acciones
 
-outputDir := A_ScriptDir . "\Capturas"
+outputDir := A_ScriptDir . "\captures\"
 FileCreateDir, %outputDir%
 
 If !pToken := Gdip_Startup()
@@ -41,12 +65,12 @@ Loop, %nRows%
         row := A_Index
         Loop, %nCols%
         {
-            ; Capturar regi髇 de pantalla
+            ; Capturar regi贸n de pantalla
             ;MsgBox, 64, Info, %x1% "|" %y1% "|" %x2% "|" %y2%
             pBitmap := Gdip_BitmapFromScreen(x1 "|" y1 "|" w "|" h)
 
             ; Ruta del archivo PNG en el mismo directorio del script
-            FileName := A_ScriptDir . "\Capturas\" . row . "_" . A_Index . "_ahk_test.png"
+            FileName := outputDir . row . "_" . A_Index . "_ahk_test.png"
 
             ; Guardar como PNG (calidad 100)
             Gdip_SaveBitmapToFile(pBitmap, FileName, 100)

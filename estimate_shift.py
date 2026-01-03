@@ -1,13 +1,63 @@
+"""
+Este script implementa una utilidad de diagnóstico para estimar el desplazamiento
+relativo entre dos imágenes consecutivas utilizando visión artificial.
+
+Está diseñado como una herramienta de prueba y depuración del algoritmo de
+estimación de desplazamiento empleado posteriormente en procesos de cosido
+(stitching) de imágenes más complejos.
+
+────────────────────────────────────────────────────────────
+OBJETIVO
+────────────────────────────────────────────────────────────
+
+- Calcular el desplazamiento horizontal (dx) y vertical (dy) entre dos imágenes.
+- Estimar una métrica de confianza asociada al resultado.
+- Permitir la visualización de los matches válidos (inliers) para análisis visual.
+
+────────────────────────────────────────────────────────────
+MÉTODO UTILIZADO
+────────────────────────────────────────────────────────────
+
+El cálculo del desplazamiento se basa en el siguiente pipeline:
+
+1. Conversión de las imágenes de entrada a escala de grises.
+2. Detección de puntos clave y descriptores mediante ORB.
+3. Emparejamiento de descriptores usando distancia Hamming.
+4. Filtrado de matches con el criterio de Lowe (ratio test).
+5. Estimación de una transformación afín parcial mediante RANSAC.
+6. Extracción del desplazamiento (dx, dy) a partir de la matriz estimada.
+7. Cálculo de la confianza como el porcentaje de inliers.
+
+────────────────────────────────────────────────────────────
+MODO DEPURACIÓN
+────────────────────────────────────────────────────────────
+
+Cuando debug=True:
+
+- Se devuelven, además de dx y dy:
+  - keypoints de ambas imágenes
+  - lista de matches filtrados
+  - máscara de inliers resultante de RANSAC
+- El script permite visualizar gráficamente los matches válidos para
+  inspeccionar la calidad de la estimación.
+
+────────────────────────────────────────────────────────────
+USO PREVISTO
+────────────────────────────────────────────────────────────
+
+Este script se utiliza para:
+- Validar el comportamiento del algoritmo de estimación de desplazamiento.
+- Ajustar parámetros (número de features, ratio test, umbral RANSAC).
+- Identificar fallos de correspondencia entre imágenes concretas.
+
+No está pensado como herramienta final de producción, sino como apoyo técnico
+para desarrollo y ajuste fino del pipeline de stitching.
+"""
+
 import cv2
 import numpy as np
 import sys
 
-
-# ------------------------------------------------------------
-# Estima el desplazamiento (dx, dy) entre dos imágenes
-# usando ORB + matching + RANSAC
-# Incluye visualización de los inliers
-# ------------------------------------------------------------
 
 def estimate_shift(img1_p, img2_p, min_matches=30, debug=False):
     """

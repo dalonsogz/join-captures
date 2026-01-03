@@ -1,3 +1,99 @@
+"""
+Este script implementa un sistema completo de cosido (“stitching”) de imágenes
+basado en estimación automática de desplazamientos mediante visión artificial.
+
+El objetivo es reconstruir una imagen final grande a partir de múltiples capturas
+organizadas inicialmente en filas y columnas, donde existe solape parcial entre
+imágenes adyacentes tanto en horizontal como en vertical.
+
+────────────────────────────────────────────────────────────
+VISIÓN GENERAL DEL PROCESO
+────────────────────────────────────────────────────────────
+
+El pipeline se divide en tres fases principales:
+
+1) Estimación de desplazamientos entre imágenes consecutivas
+2) Cosido horizontal de imágenes dentro de cada fila
+3) Cosido vertical de las filas ya unidas horizontalmente
+
+Todo el proceso se apoya en OpenCV (ORB + matching + RANSAC) para inferir la
+geometría relativa entre imágenes.
+
+────────────────────────────────────────────────────────────
+1. ESTIMACIÓN DE DESPLAZAMIENTOS (ORB + RANSAC)
+────────────────────────────────────────────────────────────
+
+La función estimate_shift() calcula el desplazamiento relativo (dx, dy) entre dos
+imágenes consecutivas:
+
+- Conversión a escala de grises
+- Detección de puntos clave ORB
+- Matching de descriptores con distancia Hamming
+- Filtrado con el criterio de Lowe (ratio test)
+- Estimación de una transformación afín parcial usando RANSAC
+- Extracción del desplazamiento (dx, dy)
+- Cálculo de una métrica de confianza basada en el porcentaje de inliers
+
+Opcionalmente, el proceso puede visualizar los matches válidos para depuración.
+
+────────────────────────────────────────────────────────────
+2. COSIDO HORIZONTAL DE CADA FILA
+────────────────────────────────────────────────────────────
+
+Para cada fila:
+
+- Se calculan los desplazamientos horizontales entre columnas consecutivas.
+- Se aplican correcciones manuales específicas para casos problemáticos donde
+  la estimación automática no es fiable.
+- Se construye un lienzo incremental concatenando las partes no solapadas de
+  cada imagen.
+- El resultado de cada fila se guarda como una imagen intermedia:
+      row_XX_stitched.png
+
+Este paso produce una imagen por fila, ya unida horizontalmente.
+
+────────────────────────────────────────────────────────────
+3. COSIDO VERTICAL DE LAS FILAS
+────────────────────────────────────────────────────────────
+
+Una vez cosidas las filas:
+
+- Se estiman desplazamientos verticales entre filas consecutivas.
+- Se calcula una posición absoluta para cada fila en un sistema de coordenadas
+  global, partiendo de una fila origen.
+- Se descartan desplazamientos con baja confianza para evitar introducir
+  geometría incorrecta.
+- Se calcula el bounding box global que contiene todas las filas.
+- Se crea un canvas final y se pintan las filas en sus posiciones absolutas.
+
+El resultado final se guarda como:
+    final_stitched.png
+
+────────────────────────────────────────────────────────────
+CONSIDERACIONES TÉCNICAS IMPORTANTES
+────────────────────────────────────────────────────────────
+
+- El sistema no asume alineación perfecta: toda la geometría se infiere.
+- Se prioriza robustez frente a automatización total (ajustes manuales incluidos).
+- El uso de ORB permite un buen equilibrio entre velocidad y calidad.
+- El consumo de memoria puede ser elevado en las etapas finales.
+- Existen dos implementaciones del cosido vertical:
+  - stitch_rows_vertical_old(): versión incremental clásica
+  - stitch_rows_vertical(): versión basada en posiciones absolutas globales
+
+────────────────────────────────────────────────────────────
+USO PREVISTO
+────────────────────────────────────────────────────────────
+
+Este script está pensado para:
+- Reconstrucción técnica de grandes mosaicos
+- Capturas automatizadas con solape
+- Entornos controlados donde se acepta intervención manual puntual
+
+No está diseñado como una solución genérica “plug & play”, sino como una
+herramienta de reconstrucción geométrica controlada.
+"""
+
 import cv2
 import numpy as np
 import sys
